@@ -1,1 +1,1 @@
-libaio1
+libaio1t64
