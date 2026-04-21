@@ -223,19 +223,36 @@ def setup_oracle_client():
             os.remove(zip_path)
             
     # 2. Linux Symlink Repair (Fixing Python's zipfile bug)
+    # if system == "Linux" and os.path.exists(client_dir):
+    #     for filename in os.listdir(client_dir):
+    #         filepath = os.path.join(client_dir, filename)
+    #         if os.path.isfile(filepath) and os.path.getsize(filepath) < 50:
+    #             try:
+    #                 with open(filepath, 'r') as f:
+    #                     target_name = f.read().strip()
+    #                 target_path = os.path.join(client_dir, target_name)
+    #                 if os.path.exists(target_path) and os.path.getsize(target_path) > 100:
+    #                     os.remove(filepath)
+    #                     shutil.copy(target_path, filepath)
+    #             except Exception:
+    #                 pass
+
     if system == "Linux" and os.path.exists(client_dir):
-        for filename in os.listdir(client_dir):
-            filepath = os.path.join(client_dir, filename)
-            if os.path.isfile(filepath) and os.path.getsize(filepath) < 50:
-                try:
-                    with open(filepath, 'r') as f:
-                        target_name = f.read().strip()
-                    target_path = os.path.join(client_dir, target_name)
-                    if os.path.exists(target_path) and os.path.getsize(target_path) > 100:
-                        os.remove(filepath)
-                        shutil.copy(target_path, filepath)
-                except Exception:
-                    pass
+        aio_link = os.path.join(client_dir, "libaio.so.1")
+        # Check if the shortcut is missing
+        if not os.path.lexists(aio_link):
+            # Look for where Debian Trixie hid the new library
+            system_paths = [
+                "/usr/lib/x86_64-linux-gnu/libaio.so.1t64",
+                "/lib/x86_64-linux-gnu/libaio.so.1t64",
+                "/usr/lib/aarch64-linux-gnu/libaio.so.1t64",
+                "/lib/aarch64-linux-gnu/libaio.so.1t64"
+            ]
+            for path in system_paths:
+                if os.path.exists(path):
+                    # Create a shortcut named 'libaio.so.1' pointing to the real file
+                    os.symlink(path, aio_link)
+                    break
                     
     # 3. --- THE LINUX LD_LIBRARY_PATH JEDI MIND TRICK ---
     if system == "Linux":
